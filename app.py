@@ -84,20 +84,26 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- PASSWORD PROTECTION GATE ---
+# --- PASSWORD PROTECTION GATE WITH BADGE ---
 def check_password():
     """Returns True if the user enters the correct password."""
     def password_entered():
-        if st.session_state["password"] == "smahosa2026":  # You can change this password anytime
+        if st.session_state["password"] == "smahosa2026":  # Official Access Password
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
+    # Display Official Badge on Login Screen
+    col_l, col_m, col_r = st.columns([2, 2, 2])
+    with col_m:
+        if os.path.exists("badge.jpg.png"):
+            st.image("badge.jpg.png", use_container_width=True)
+
     if "password_correct" not in st.session_state:
         st.markdown("""
-            <div style="text-align: center; padding: 40px;">
-                <h2 style="color: #1b263b;">🏛️ SMAHOSA Management Portal</h2>
+            <div style="text-align: center; padding: 10px;">
+                <h2 style="color: #1b263b;">SMAHOSA Management Portal</h2>
                 <p style="color: #415a77;">St. Mary's High School Old Students Association</p>
             </div>
         """, unsafe_allow_html=True)
@@ -106,8 +112,8 @@ def check_password():
         return False
     elif not st.session_state["password_correct"]:
         st.markdown("""
-            <div style="text-align: center; padding: 40px;">
-                <h2 style="color: #1b263b;">🏛️ SMAHOSA Management Portal</h2>
+            <div style="text-align: center; padding: 10px;">
+                <h2 style="color: #1b263b;">SMAHOSA Management Portal</h2>
             </div>
         """, unsafe_allow_html=True)
         st.text_input("Access Password", type="password", on_change=password_entered, key="password")
@@ -119,7 +125,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- DISPLAY OFFICIAL BADGE & HEADER ---
+# --- DISPLAY MAIN HEADER AFTER LOGIN ---
 col_left, col_mid, col_right = st.columns([2, 2, 2])
 with col_mid:
     if os.path.exists("badge.jpg.png"):
