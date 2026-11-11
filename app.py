@@ -21,19 +21,19 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- SAFE CSS STYLING WITH WATERMARK ---
-css_content = f"""
+# --- SAFE CSS STYLING WITH WATERMARK (NO F-STRING CONFLICTS) ---
+css_template = """
     <style>
-    .main {{
+    .main {
         background-color: #f0f4f8;
-        background-image: linear-gradient(rgba(240, 244, 248, 0.96), rgba(240, 244, 248, 0.96)), url("data:image/png;base64,{badge_base64}");
+        background-image: linear-gradient(rgba(240, 244, 248, 0.96), rgba(240, 244, 248, 0.96)), url("data:image/png;base64,REPLACE_BASE64");
         background-repeat: no-repeat;
         background-position: center;
         background-attachment: fixed;
         background-size: 30% auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .header-card {{
+    .header-card {
         background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
         padding: 25px;
         border-radius: 14px;
@@ -43,52 +43,52 @@ css_content = f"""
         box-shadow: 0 6px 20px rgba(13, 27, 42, 0.2);
         border-bottom: 4px solid #e0a96d;
     }
-    .header-card h1 {{
+    .header-card h1 {
         color: #ffffff;
         font-size: 2.1rem;
         margin-bottom: 6px;
         font-weight: 700;
         letter-spacing: 0.5px;
     }
-    .header-card p {{
+    .header-card p {
         color: #e0e1dd;
         font-size: 1rem;
         letter-spacing: 0.5px;
         font-weight: 400;
-    }}
-    h2, h3 {{
+    }
+    h2, h3 {
         color: #1b263b !important;
         font-weight: 600;
-    }}
-    [data-testid="stMetric"] {{
+    }
+    [data-testid="stMetric"] {
         background-color: #ffffff;
         padding: 15px 20px;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         border-left: 5px solid #1b263b;
-    }}
-    [data-testid="stMetricLabel"] {{
+    }
+    [data-testid="stMetricLabel"] {
         color: #415a77 !important;
         font-weight: 600;
         font-size: 0.95rem;
-    }}
-    [data-testid="stMetricValue"] {{
+    }
+    [data-testid="stMetricValue"] {
         font-size: 1.7rem;
         color: #0d1b2a !important;
         font-weight: 700;
-    }}
-    [data-testid="stSidebar"] {{
+    }
+    [data-testid="stSidebar"] {
         background-color: #0d1b2a;
-    }}
-    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {{
+    }
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {
         color: #e0e1dd !important;
-    }}
-    .stAlert {{
+    }
+    .stAlert {
         border-radius: 8px;
-    }}
+    }
     </style>
 """
-st.markdown(css_content, unsafe_allow_html=True)
+st.markdown(css_template.replace("REPLACE_BASE64", badge_base64), unsafe_allow_html=True)
 
 # --- PASSWORD PROTECTION GATE WITH SINGLE TOP BADGE ---
 def check_password():
@@ -301,7 +301,7 @@ elif menu == "💰 Financial Ledger":
                     st.success("Transaction recorded successfully with exact date, month, and year tracking!")
                     st.rerun()
 
-    with tab2:
+    with tab_tx2:
         with st.form("remove_tx_form"):
             st.write("### Delete Transaction Record")
             target_tx = st.selectbox("Select Transaction ID to Remove", st.session_state.transactions["Tx ID"] + " (" + st.session_state.transactions["Category"] + " - UGX " + st.session_state.transactions["Amount (UGX)"].astype(str) + ")")
