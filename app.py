@@ -180,6 +180,24 @@ if 'transactions' not in st.session_state:
 st.sidebar.markdown("<h2 style='color: #ffffff; font-size: 1.3rem;'>🧭 Management Menu</h2>", unsafe_allow_html=True)
 menu = st.sidebar.selectbox("Select Portal Section", ["📊 Dashboard", "👥 Alumni Directory", "💰 Financial Ledger", "⚖️ Hardship & Relief", "📈 Executive Reports"])
 
+# --- COMMON STYLING FOR EXPORTABLE HTML REPORTS ---
+base_html_style = """
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #1b263b; padding: 40px; line-height: 1.6; background: #ffffff; }
+        h1, h2, h3 { color: #0d1b2a; }
+        .header { text-align: center; border-bottom: 3px solid #e0a96d; padding-bottom: 15px; margin-bottom: 30px; }
+        .section { margin-bottom: 30px; page-break-inside: avoid; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #1b263b; color: white; }
+        .metric-box { background: #f8fafc; border-left: 5px solid #1b263b; padding: 15px; margin: 15px 0; }
+        @media print {
+            body { padding: 10px; }
+            button { display: none !important; }
+        }
+    </style>
+"""
+
 # --- VIEW 1: DASHBOARD ---
 if menu == "📊 Dashboard":
     st.subheader("📊 Executive Summary Dashboard")
@@ -202,13 +220,17 @@ elif menu == "👥 Alumni Directory":
     st.subheader("👥 Registered OBs & OGs Directory")
     st.dataframe(st.session_state.members, use_container_width=True)
     
-    csv_members = st.session_state.members.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Directory (Mobile-Friendly CSV)",
-        data=csv_members,
-        file_name="smahosa_members_directory.csv",
-        mime="text/csv",
-    )
+    # --- DOWNLOAD PRINTABLE DIRECTORY REPORT ---
+    members_rows = ""
+    for _, r in st.session_state.members.iterrows():
+        members_rows += f"<tr><td>{r['Member ID']}</td><td>{r['Full Name']}</td><td>{r['Role']}</td><td>{r['Cohort']}</td><td>{r['Phone']}</td><td>{r['Join Date']}</td><td>{r['Status']}</td></tr>"
+    
+    dir_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>SMAHOSA Alumni Directory</title>{base_html_style}</head><body>
+    <div style="text-align: right; margin-bottom: 20px;"><button onclick="window.print()" style="background-color:#1b263b; color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px;">🖨️ Print / Save as PDF</button></div>
+    <div class="header"><h1>SMAHOSA Savings Group Portal</h1><h3>Official Alumni Membership Directory</h3><p>Total Registered Members: {len(st.session_state.members)}</p></div>
+    <div class="section"><table><tr><th>Member ID</th><th>Full Name</th><th>Role</th><th>Cohort</th><th>Phone</th><th>Join Date</th><th>Status</th></tr>{members_rows}</table></div></body></html>"""
+    
+    st.download_button("📥 Download Printable Directory Report (HTML)", data=dir_html, file_name="SMAHOSA_Alumni_Directory.html", mime="text/html")
     
     st.markdown("---")
     tab1, tab2, tab3 = st.tabs(["➕ Add New Member", "✏️ Edit / Update Member", "🗑️ Remove Member"])
@@ -288,382 +310,9 @@ elif menu == "💰 Financial Ledger":
     
     st.dataframe(st.session_state.transactions, use_container_width=True)
     
-    csv_tx = st.session_state.transactions.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Full Ledger (Mobile-Friendly CSV)",
-        data=csv_tx,
-        file_name="smahosa_financial_ledger.csv",
-        mime="text/csv",
-    )
+    # --- DOWNLOAD PRINTABLE LEDGER REPORT ---
+    ledger_rows = ""
+    for _, r in st.session_state.transactions.iterrows():
+        ledger_rows += f"<tr><td>{r['Tx ID']}</td><td>{r['Member ID']}</td><td>{r['Category']}</td><td>UGX {r['Amount (UGX)']:,}</td><td>{r['Date']}</td><td>{r['Month']}</td><td>{r['Year']}</td><td>{r['Channel']}</td></tr>"
     
-    st.markdown("---")
-    tab_tx1, tab_tx2 = st.tabs(["➕ Record Transaction", "🗑️ Delete Transaction"])
-    
-    with tab_tx1:
-        with st.form("add_tx_form"):
-            st.write("### Record New Deposit or Fee")
-            c1, c2 = st.columns(2)
-            with c1:
-                tx_id = st.text_input("Transaction ID (e.g., TXN-110)")
-                m_id = st.selectbox("Select Member ID", st.session_state.members["Member ID"])
-                category = st.selectbox("Category", ["Savings Deposit", "Membership Fee", "Annual Subscription"])
-            with c2:
-                amount = st.number_input("Amount (UGX)", min_value=1000, step=1000, value=5000)
-                tx_date = st.date_input("Transaction Date", value=datetime.today())
-                
-            tx_submitted = st.form_submit_button("Record Transaction into Ledger")
-            if tx_submitted and tx_id:
-                if tx_id in st.session_state.transactions["Tx ID"].values:
-                    st.error(f"Transaction ID {tx_id} already exists!")
-                else:
-                    date_str = str(tx_date)
-                    month_str = tx_date.strftime("%B")
-                    year_val = tx_date.year
-                    
-                    new_tx = {
-                        "Tx ID": tx_id, 
-                        "Member ID": m_id, 
-                        "Category": category, 
-                        "Amount (UGX)": amount, 
-                        "Date": date_str, 
-                        "Month": month_str, 
-                        "Year": year_val, 
-                        "Channel": "Pride Microfinance"
-                    }
-                    st.session_state.transactions = pd.concat([st.session_state.transactions, pd.DataFrame([new_tx])], ignore_index=True)
-                    st.success("Transaction recorded successfully with exact date, month, and year tracking!")
-                    st.rerun()
-
-    with tab_tx2:
-        with st.form("remove_tx_form"):
-            st.write("### Delete Transaction Record")
-            target_tx = st.selectbox("Select Transaction ID to Remove", st.session_state.transactions["Tx ID"] + " (" + st.session_state.transactions["Category"] + " - UGX " + st.session_state.transactions["Amount (UGX)"].astype(str) + ")")
-            tx_remove_sub = st.form_submit_button("Delete Transaction")
-            if tx_remove_sub:
-                selected_tx_id = target_tx.split(" ")[0]
-                st.session_state.transactions = st.session_state.transactions[st.session_state.transactions["Tx ID"] != selected_tx_id]
-                st.success(f"Successfully deleted transaction {selected_tx_id}!")
-                st.rerun()
-
-# --- VIEW 4: HARDSHIP & RELIEF ---
-elif menu == "⚖️ Hardship & Relief":
-    st.subheader("⚖️ Confidential Hardship, Absence & Relief Log")
-    st.info("Article IV: Formal written grace period petitions submitted to the Chairperson remain strictly confidential. Authorized executives can also generate formal absence and notice broadcasts for the SMAHOSA WhatsApp group.")
-    
-    tab_h1, tab_h2 = st.tabs(["📝 Confidential Log / Petition", "📢 WhatsApp Executive Broadcast Generator"])
-    
-    with tab_h1:
-        with st.form("hardship_form"):
-            st.write("### Submit Grace Period Petition")
-            petition_member = st.selectbox("Select Member", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"])
-            reason = st.text_area("Confidential Reason / Notes")
-            petition_submitted = st.form_submit_button("Submit Petition to Chairperson")
-            if petition_submitted:
-                st.success("Petition securely logged. Account flagged for temporary relief grace period under Article IV.")
-                
-    with tab_h2:
-        st.write("### 📲 Automated SMAHOSA WhatsApp Group Notice")
-        st.markdown("Draft and approve official announcements regarding member absence, apologies, or grace periods for instant broadcast to the SMAHOSA WhatsApp group.")
-        
-        broadcast_member = st.selectbox("Select Alumnus for Notice", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"], key="bc_member")
-        notice_type = st.selectbox("Notice Category", [
-            "Official Absence & Apology (Reason Disclosed)", 
-            "Official Absence (Personal / Confidential Grounds)", 
-            "Article IV Grace Period Approved"
-        ])
-        custom_note = st.text_area("Additional Details / Remarks (Optional)", placeholder="e.g., Attending family matters, expected back next meeting.")
-        
-        selected_name = broadcast_member.split(" - ")[1]
-        
-        if notice_type == "Official Absence & Apology (Reason Disclosed)":
-            msg_body = f"🏛️ *SMAHOSA EXECUTIVE NOTICE*\n\nDear OBs and OGs,\n\nPlease be informed that our fellow member, *{selected_name}*, has tendered an official apology for absence from recent engagements due to: _{custom_note if custom_note else 'official commitments'}_.\n\nThe executive has noted this and extended our best regards.\n\n*Office of the Publicity Officer & Chairperson*"
-        elif notice_type == "Official Absence (Personal / Confidential Grounds)":
-            msg_body = f"🏛️ *SMAHOSA EXECUTIVE NOTICE*\n\nDear OBs and OGs,\n\nKindly note that our fellow member, *{selected_name}*, will be unavailable for upcoming group activities on personal grounds. The executive is in touch and sends best wishes.\n\n*Office of the Publicity Officer & Chairperson*"
-        else:
-            msg_body = f"🏛️ *SMAHOSA ARTICLE IV NOTICE*\n\nDear OBs and OGs,\n\nPlease note that an official grace period has been granted to *{selected_name}* under Article IV of the SMAHOSA Constitution.\n\n*Office of the Chairperson*"
-
-        st.markdown("#### 📋 Preview Generated Message:")
-        st.code(msg_body, language="markdown")
-        
-        encoded_msg = urllib.parse.quote(msg_body)
-        whatsapp_url = f"https://wa.me/?text={encoded_msg}"
-        
-        col_b1, col_b2 = st.columns(2)
-        with col_b1:
-            if st.button("🚀 Broadcast to SMAHOSA WhatsApp Group"):
-                st.success("✅ Successfully broadcasted to SMAHOSA WhatsApp Group address!")
-                st.balloons()
-        with col_b2:
-            st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
-
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-REPORT WITH AUTOMATED SPEECHES & ANALYTICS) ---
-elif menu == "📈 Executive Reports":
-    st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
-    st.markdown("Detailed institutional performance report, complete with automated context-aware executive speeches, financial variance explanations, relief logs, and proportional distribution analytics.")
-    
-    with st.expander("⚙️ Report Parameters & Command Panel", expanded=True):
-        report_type = st.radio("Select Report Mode", ["Monthly Report", "Custom Period Range"])
-        
-        if report_type == "Monthly Report":
-            selected_month = st.selectbox("Select Month", ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
-            selected_year = st.selectbox("Select Year", [2026, 2027, 2028])
-            filtered_tx = st.session_state.transactions[(st.session_state.transactions["Month"] == selected_month) & (st.session_state.transactions["Year"] == selected_year)]
-            period_label = f"{selected_month} {selected_year}"
-        else:
-            col_d1, col_d2 = st.columns(2)
-            with col_d1:
-                start_date = st.date_input("Start Date", value=datetime.today().replace(day=1))
-            with col_d2:
-                end_date = st.date_input("End Date", value=datetime.today())
-            filtered_tx = st.session_state.transactions[
-                (pd.to_datetime(st.session_state.transactions["Date"]) >= pd.to_datetime(start_date)) & 
-                (pd.to_datetime(st.session_state.transactions["Date"]) <= pd.to_datetime(end_date))
-            ]
-            period_label = f"Period: {start_date} to {end_date}"
-
-    st.markdown("---")
-    
-    # --- CALCULATIONS & AUTOMATED SPEECH GENERATION ---
-    total_period_savings = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
-    total_transactions_count = len(filtered_tx)
-    total_members_count = len(st.session_state.members)
-
-    # Automated Chairperson Speech
-    chairperson_speech = (
-        f"“Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy "
-        f"that I present this comprehensive executive performance report for **{period_label}**. "
-        f"During this operational cycle, our association successfully mobilized a total savings pool of **UGX {total_period_savings:,}** "
-        f"across **{total_transactions_count}** recorded ledger entries among our **{total_members_count}** registered members. "
-        f"Our collaboration with Pride Microfinance continues to safeguard our financial assets while reinforcing our core mission of economic self-reliance, "
-        f"mutual empowerment, and strict constitutional accountability. We commend all members and class representatives for upholding our values.”"
-    )
-
-    # Automated Finance Officer Speech
-    finance_speech = (
-        f"“Fellow members, financial transparency and rigorous fiscal discipline remain the absolute bedrock of our savings cooperative for **{period_label}**. "
-        f"All capital inflows—encompassing mandatory non-refundable registration fees, annual subscriptions, and refundable savings deposits totaling "
-        f"**UGX {total_period_savings:,}**—have been meticulously reconciled and securely logged into our official Pride Microfinance account. "
-        f"With **{total_transactions_count}** active transactions processed during this window, our institutional liquidity position is exceptionally robust, "
-        f"reflecting zero unallocated funds and timely compliance across all participating cohorts.”"
-    )
-
-    # Automated Vice Chairperson Speech
-    vice_chair_speech = (
-        f"“Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of "
-        f"professional transition, hardship, and celebration. For **{period_label}**, the Vice Chairperson's office, in tandem with welfare and disciplinary committees, "
-        f"has maintained active oversight of member engagement. By judiciously applying Article IV grace period provisions for members facing temporary challenges, "
-        f"we ensure that no alumnus is left behind. Let us continue to foster this compassionate accountability as we build a sustainable legacy.”"
-    )
-
-    # Pie chart category breakdown data
-    if not filtered_tx.empty:
-        pie_data = filtered_tx.groupby("Category")["Amount (UGX)"].sum().reset_index()
-        total_cat_sum = pie_data["Amount (UGX)"].sum()
-        pie_data["Percentage"] = (pie_data["Amount (UGX)"] / total_cat_sum * 100).round(1)
-    else:
-        pie_data = pd.DataFrame(columns=["Category", "Amount (UGX)", "Percentage"])
-
-    # Build HTML Rows for Category Breakdown Table
-    cat_table_rows = ""
-    if not pie_data.empty:
-        for _, r in pie_data.iterrows():
-            cat_table_rows += f"<tr><td>{r['Category']}</td><td>UGX {r['Amount (UGX)']:,}</td><td>{r['Percentage']}%</td></tr>"
-    else:
-        cat_table_rows = "<tr><td colspan='3' style='text-align:center;'>No categorical data available for this period.</td></tr>"
-
-    # Build HTML Rows for Transactions Table
-    tx_table_rows = ""
-    if not filtered_tx.empty:
-        for _, r in filtered_tx.iterrows():
-            tx_table_rows += f"<tr><td>{r['Tx ID']}</td><td>{r['Member ID']}</td><td>{r['Category']}</td><td>UGX {r['Amount (UGX)']:,}</td><td>{r['Date']}</td></tr>"
-    else:
-        tx_table_rows = "<tr><td colspan='5' style='text-align:center;'>No transactions recorded for this period.</td></tr>"
-
-    html_report_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>SMAHOSA Executive Report - {period_label}</title>
-        <style>
-            body {{ font-family: 'Segoe UI', Arial, sans-serif; color: #1b263b; padding: 40px; line-height: 1.6; background: #ffffff; }}
-            h1, h2, h3 {{ color: #0d1b2a; }}
-            .header {{ text-align: center; border-bottom: 3px solid #e0a96d; padding-bottom: 15px; margin-bottom: 30px; }}
-            .section {{ margin-bottom: 30px; page-break-inside: avoid; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
-            th, td {{ border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 14px; }}
-            th {{ background-color: #1b263b; color: white; }}
-            .metric-box {{ background: #f8fafc; border-left: 5px solid #1b263b; padding: 15px; margin: 15px 0; }}
-            @media print {{
-                body {{ padding: 10px; }}
-                button {{ display: none !important; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div style="text-align: right; margin-bottom: 20px;">
-            <button onclick="window.print()" style="background-color:#1b263b; color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px;">🖨️ Print / Save as PDF</button>
-        </div>
-
-        <div class="header">
-            <h1>SMAHOSA Savings Group Portal</h1>
-            <h3>St. Mary's High School Old Boys & Old Girls Official Management System</h3>
-            <p><b>Automated Executive Performance Report</b> | Period: {period_label}</p>
-        </div>
-
-        <div class="section">
-            <h2>🏛️ Automated Executive Opening Remarks ({period_label})</h2>
-            
-            <h3>1. From the Desk of the Chairperson</h3>
-            <p>{chairperson_speech}</p>
-            
-            <h3>2. Statement from the Finance Officer</h3>
-            <p>{finance_speech}</p>
-            
-            <h3>3. Address from the Vice Chairperson</h3>
-            <p>{vice_chair_speech}</p>
-        </div>
-
-        <div class="section">
-            <h2>📊 Comprehensive Report Summary & Financial Breakdown</h2>
-            <div class="metric-box">
-                <p><b>Period Influx:</b> UGX {total_period_savings:,}</p>
-                <p><b>Recorded Transactions:</b> {total_transactions_count}</p>
-                <p><b>Active Membership Base:</b> {total_members_count} OBs & OGs</p>
-            </div>
-            <h3>Detailed Financial Variance & Figure Analysis</h3>
-            <p>During the reporting window of <b>{period_label}</b>, the association registered a total cash mobilization of <b>UGX {total_period_savings:,}</b> spanning across <b>{total_transactions_count}</b> distinct ledger entries with Pride Microfinance. No unexplained variances or ledger discrepancies were noted during reconciliation.</p>
-        </div>
-
-        <div class="section">
-            <h2>🥧 Proportional Category Distribution (Pie Chart & Percentage Breakdown)</h2>
-            <p>The breakdown below illustrates the exact percentage and monetary distribution of funds mobilized across different contribution categories for the selected reporting period.</p>
-            <table>
-                <tr>
-                    <th>Contribution Category</th>
-                    <th>Total Amount (UGX)</th>
-                    <th>Proportional Share (%)</th>
-                </tr>
-                {cat_table_rows}
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>📑 Detailed Transaction Log Table</h2>
-            <table>
-                <tr>
-                    <th>Tx ID</th>
-                    <th>Member ID</th>
-                    <th>Category</th>
-                    <th>Amount (UGX)</th>
-                    <th>Date</th>
-                </tr>
-                {tx_table_rows}
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>⚖️ Relief, Apologies & Absence Comprehensive Report</h2>
-            <table>
-                <tr>
-                    <th>Member Name</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Remarks</th>
-                </tr>
-                <tr>
-                    <td>Mulindwa Laurence</td>
-                    <td>Official Apology</td>
-                    <td>Noted & Cleared</td>
-                    <td>Excused due to official institutional commitments.</td>
-                </tr>
-                <tr>
-                    <td>Muwonge Sadat</td>
-                    <td>Article IV Grace Period</td>
-                    <td>Approved</td>
-                    <td>Confidential personal grounds; temporary relief granted.</td>
-                </tr>
-            </table>
-        </div>
-    </body>
-    </html>
-    """
-
-    st.download_button(
-        label="📥 Download Official Printable / PDF Executive Report (HTML)",
-        data=html_report_content,
-        file_name=f"SMAHOSA_Executive_Report_{period_label.replace(' ', '_')}.html",
-        mime="text/html",
-        type="primary"
-    )
-    st.caption("💡 Clicking this button downloads a clean executive report file complete with automated executive speeches, financial analysis, proportional category distribution tables, and transaction logs. When opened, simply click the **'Print / Save as PDF'** button at the top!")
-
-    st.markdown("---")
-    
-    # --- LIVE DASHBOARD: AUTOMATED EXECUTIVE OPENING REMARKS ---
-    st.markdown(f"### 🏛️ Automated Executive Opening Remarks ({period_label})")
-    
-    st.markdown("#### 1. From the Desk of the Chairperson")
-    st.info(chairperson_speech)
-    
-    st.markdown("#### 2. Statement from the Finance Officer")
-    st.info(finance_speech)
-    
-    st.markdown("#### 3. Address from the Vice Chairperson")
-    st.info(vice_chair_speech)
-
-    st.markdown("---")
-    
-    # --- FINANCIAL & STATISTICAL SUMMARY ---
-    st.markdown(f"### 📊 Comprehensive Report Summary & Financial Breakdown ({period_label})")
-    
-    col_m1, col_m2 = st.columns(2)
-    col_m1.metric("Period Influx (UGX)", f"{total_period_savings:,}")
-    col_m2.metric("Recorded Transactions", total_transactions_count)
-    
-    # Comprehensive Explanatory Narrative
-    st.markdown("#### 📑 Detailed Financial Variance & Figure Analysis")
-    if not filtered_tx.empty:
-        st.success(
-            f"**Comprehensive Figure Explanation:** During the reporting window of **{period_label}**, the association registered a total cash mobilization of **UGX {total_period_savings:,}** spanning across **{total_transactions_count}** distinct ledger entries. "
-            "These figures arose primarily due to scheduled monthly savings deposits meeting maturity deadlines before the banking cutoff date with Pride Microfinance. "
-            "Subscription spikes observed in this cycle correspond directly with cohort mobilization drives led by class representatives, while mandatory non-refundable fees remained stable, reflecting baseline compliance among newly integrated members."
-        )
-    else:
-        st.warning(
-            f"**Comprehensive Figure Explanation:** For the reporting window of **{period_label}**, the recorded financial influx stands at **UGX 0**, with zero transactions logged. "
-            "This occurrence is attributed to inter-cycle payment windows where members consolidate their contributions ahead of quarterly deadlines, or administrative delays in batch-uploading physical bank slips into the portal database."
-        )
-
-    st.markdown("#### 📑 Detailed Transaction Log Table")
-    st.dataframe(filtered_tx, use_container_width=True)
-
-    # --- PIE CHART ANALYTICS ---
-    st.markdown("### 🥧 Proportional Category Distribution (Pie Chart Analytics)")
-    st.markdown("The breakdown below illustrates the exact percentage distribution of funds mobilized across different contribution categories for the selected reporting period.")
-    
-    if not filtered_tx.empty:
-        st.altair_chart(
-            __import__('altair').Chart(pie_data).mark_arc(innerRadius=50).encode(
-                theta=__import__('altair').Theta(field="Amount (UGX)", type="quantitative"),
-                color=__import__('altair').Color(field="Category", type="nominal"),
-                tooltip=["Category", "Amount (UGX)"]
-            ).properties(width=500, height=300),
-            use_container_width=True
-        )
-        st.dataframe(pie_data, use_container_width=True)
-    else:
-        st.info("No categorical distribution data available for the selected timeframe to generate proportional charts.")
-
-    # --- RELIEF & ABSENCE LOG SECTION ---
-    st.markdown("### ⚖️ Relief, Apologies & Absence Comprehensive Report")
-    st.markdown("In accordance with governance standards, the executive has documented all member welfare interventions, apologies, and formal grace periods processed during this cycle:")
-    
-    relief_sample = pd.DataFrame([
-        {"Member Name": "Mulindwa Laurence", "Category": "Official Apology", "Status": "Noted & Cleared", "Remarks": "Excused due to official institutional commitments."},
-        {"Member Name": "Muwonge Sadat", "Category": "Article IV Grace Period", "Status": "Approved", "Remarks": "Confidential personal grounds; temporary relief granted."}
-    ])
-    st.dataframe(relief_sample, use_container_width=True)
-
-# --- CLOSE WATERMARK CONTAINER ---
-st.markdown('</div>', unsafe_allow_html=True)
+    total_
