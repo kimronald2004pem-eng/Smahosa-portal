@@ -396,10 +396,10 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH NATIVE HTML DOWNLOAD) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-REPORT WITH AUTOMATED SPEECHES & ANALYTICS) ---
 elif menu == "📈 Executive Reports":
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
-    st.markdown("Detailed institutional performance report, complete with formal executive statements, financial variance explanations, relief logs, and proportional distribution analytics.")
+    st.markdown("Detailed institutional performance report, complete with automated context-aware executive speeches, financial variance explanations, relief logs, and proportional distribution analytics.")
     
     with st.expander("⚙️ Report Parameters & Command Panel", expanded=True):
         report_type = st.radio("Select Report Mode", ["Monthly Report", "Custom Period Range"])
@@ -423,9 +423,61 @@ elif menu == "📈 Executive Reports":
 
     st.markdown("---")
     
-    # --- GENERATE CLEAN STANDALONE HTML REPORT FOR DOWNLOAD ---
+    # --- CALCULATIONS & AUTOMATED SPEECH GENERATION ---
     total_period_savings = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
     total_transactions_count = len(filtered_tx)
+    total_members_count = len(st.session_state.members)
+
+    # Automated Chairperson Speech
+    chairperson_speech = (
+        f"“Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy "
+        f"that I present this comprehensive executive performance report for **{period_label}**. "
+        f"During this operational cycle, our association successfully mobilized a total savings pool of **UGX {total_period_savings:,}** "
+        f"across **{total_transactions_count}** recorded ledger entries among our **{total_members_count}** registered members. "
+        f"Our collaboration with Pride Microfinance continues to safeguard our financial assets while reinforcing our core mission of economic self-reliance, "
+        f"mutual empowerment, and strict constitutional accountability. We commend all members and class representatives for upholding our values.”"
+    )
+
+    # Automated Finance Officer Speech
+    finance_speech = (
+        f"“Fellow members, financial transparency and rigorous fiscal discipline remain the absolute bedrock of our savings cooperative for **{period_label}**. "
+        f"All capital inflows—encompassing mandatory non-refundable registration fees, annual subscriptions, and refundable savings deposits totaling "
+        f"**UGX {total_period_savings:,}**—have been meticulously reconciled and securely logged into our official Pride Microfinance account. "
+        f"With **{total_transactions_count}** active transactions processed during this window, our institutional liquidity position is exceptionally robust, "
+        f"reflecting zero unallocated funds and timely compliance across all participating cohorts.”"
+    )
+
+    # Automated Vice Chairperson Speech
+    vice_chair_speech = (
+        f"“Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of "
+        f"professional transition, hardship, and celebration. For **{period_label}**, the Vice Chairperson's office, in tandem with welfare and disciplinary committees, "
+        f"has maintained active oversight of member engagement. By judiciously applying Article IV grace period provisions for members facing temporary challenges, "
+        f"we ensure that no alumnus is left behind. Let us continue to foster this compassionate accountability as we build a sustainable legacy.”"
+    )
+
+    # Pie chart category breakdown data
+    if not filtered_tx.empty:
+        pie_data = filtered_tx.groupby("Category")["Amount (UGX)"].sum().reset_index()
+        total_cat_sum = pie_data["Amount (UGX)"].sum()
+        pie_data["Percentage"] = (pie_data["Amount (UGX)"] / total_cat_sum * 100).round(1)
+    else:
+        pie_data = pd.DataFrame(columns=["Category", "Amount (UGX)", "Percentage"])
+
+    # Build HTML Rows for Category Breakdown Table
+    cat_table_rows = ""
+    if not pie_data.empty:
+        for _, r in pie_data.iterrows():
+            cat_table_rows += f"<tr><td>{r['Category']}</td><td>UGX {r['Amount (UGX)']:,}</td><td>{r['Percentage']}%</td></tr>"
+    else:
+        cat_table_rows = "<tr><td colspan='3' style='text-align:center;'>No categorical data available for this period.</td></tr>"
+
+    # Build HTML Rows for Transactions Table
+    tx_table_rows = ""
+    if not filtered_tx.empty:
+        for _, r in filtered_tx.iterrows():
+            tx_table_rows += f"<tr><td>{r['Tx ID']}</td><td>{r['Member ID']}</td><td>{r['Category']}</td><td>UGX {r['Amount (UGX)']:,}</td><td>{r['Date']}</td></tr>"
+    else:
+        tx_table_rows = "<tr><td colspan='5' style='text-align:center;'>No transactions recorded for this period.</td></tr>"
 
     html_report_content = f"""
     <!DOCTYPE html>
@@ -456,20 +508,20 @@ elif menu == "📈 Executive Reports":
         <div class="header">
             <h1>SMAHOSA Savings Group Portal</h1>
             <h3>St. Mary's High School Old Boys & Old Girls Official Management System</h3>
-            <p><b>Executive Performance Report</b> | Period: {period_label}</p>
+            <p><b>Automated Executive Performance Report</b> | Period: {period_label}</p>
         </div>
 
         <div class="section">
-            <h2>🏛️ Full-Page Executive Opening Remarks</h2>
+            <h2>🏛️ Automated Executive Opening Remarks ({period_label})</h2>
             
             <h3>1. From the Desk of the Chairperson</h3>
-            <p>“Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy that I present this comprehensive executive performance report for the designated operational period. Our association continues to stand as a formidable beacon of economic self-reliance, unity, and mutual empowerment. Over this reporting cycle, the executive committee has observed exemplary dedication from our members, whose consistent adherence to our constitution and savings milestones ensures that SMAHOSA remains resilient against broader macroeconomic pressures. As we expand our digital architecture and streamline accountability through this management portal, our collective objective remains unwavering: fostering sustainable financial growth, supporting one another through life's eventualities under Article IV provisions, and preserving the noble values instilled in us during our formative years at St. Mary's High School.”</p>
+            <p>{chairperson_speech}</p>
             
             <h3>2. Statement from the Finance Officer</h3>
-            <p>“Fellow members, financial transparency and rigorous fiscal discipline are the absolute bedrock of our savings cooperative. During this period, all capital inflows, mandatory non-refundable registration fees, annual subscriptions, and refundable savings deposits have been meticulously reconciled and securely deposited into our official institutional account with Pride Microfinance. Our liquidity position remains exceptionally robust. The figures reflected in this report directly correlate with scheduled member contributions, timely penalty enforcement, and structured payment channels.”</p>
+            <p>{finance_speech}</p>
             
             <h3>3. Address from the Vice Chairperson</h3>
-            <p>“Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of hardship and celebration. The Vice Chairperson's office, in close collaboration with the welfare and disciplinary committees, has maintained active oversight on member engagement, attendance, and pastoral support. Special commendations are extended to class representatives who have proactively bridged communication gaps and ensured that members facing temporary professional or personal transitions are accommodated through our confidential grace period frameworks.”</p>
+            <p>{vice_chair_speech}</p>
         </div>
 
         <div class="section">
@@ -477,9 +529,23 @@ elif menu == "📈 Executive Reports":
             <div class="metric-box">
                 <p><b>Period Influx:</b> UGX {total_period_savings:,}</p>
                 <p><b>Recorded Transactions:</b> {total_transactions_count}</p>
+                <p><b>Active Membership Base:</b> {total_members_count} OBs & OGs</p>
             </div>
             <h3>Detailed Financial Variance & Figure Analysis</h3>
-            <p>During the reporting window of <b>{period_label}</b>, the association registered a total cash mobilization of <b>UGX {total_period_savings:,}</b> spanning across <b>{total_transactions_count}</b> distinct ledger entries. These figures arose primarily due to scheduled monthly savings deposits meeting maturity deadlines before the banking cutoff date with Pride Microfinance. No unexplained variances or ledger discrepancies were noted.</p>
+            <p>During the reporting window of <b>{period_label}</b>, the association registered a total cash mobilization of <b>UGX {total_period_savings:,}</b> spanning across <b>{total_transactions_count}</b> distinct ledger entries with Pride Microfinance. No unexplained variances or ledger discrepancies were noted during reconciliation.</p>
+        </div>
+
+        <div class="section">
+            <h2>🥧 Proportional Category Distribution (Pie Chart & Percentage Breakdown)</h2>
+            <p>The breakdown below illustrates the exact percentage and monetary distribution of funds mobilized across different contribution categories for the selected reporting period.</p>
+            <table>
+                <tr>
+                    <th>Contribution Category</th>
+                    <th>Total Amount (UGX)</th>
+                    <th>Proportional Share (%)</th>
+                </tr>
+                {cat_table_rows}
+            </table>
         </div>
 
         <div class="section">
@@ -492,15 +558,7 @@ elif menu == "📈 Executive Reports":
                     <th>Amount (UGX)</th>
                     <th>Date</th>
                 </tr>
-    """
-    
-    if not filtered_tx.empty:
-        for _, r in filtered_tx.iterrows():
-            html_report_content += f"<tr><td>{r['Tx ID']}</td><td>{r['Member ID']}</td><td>{r['Category']}</td><td>{r['Amount (UGX)']:,}</td><td>{r['Date']}</td></tr>"
-    else:
-        html_report_content += "<tr><td colspan='5' style='text-align:center;'>No transactions recorded for this period.</td></tr>"
-
-    html_report_content += """
+                {tx_table_rows}
             </table>
         </div>
 
@@ -538,34 +596,21 @@ elif menu == "📈 Executive Reports":
         mime="text/html",
         type="primary"
     )
-    st.caption("💡 Clicking this button downloads a clean executive report file to your device. When you open that downloaded file, it displays a **'Print / Save as PDF'** button right at the top for flawless multi-page printing!")
+    st.caption("💡 Clicking this button downloads a clean executive report file complete with automated executive speeches, financial analysis, proportional category distribution tables, and transaction logs. When opened, simply click the **'Print / Save as PDF'** button at the top!")
 
     st.markdown("---")
     
-    # --- FULL-PAGE EXPANDED EXECUTIVE OPENING REMARKS ---
-    st.markdown("### 🏛️ Full-Page Executive Opening Remarks")
+    # --- LIVE DASHBOARD: AUTOMATED EXECUTIVE OPENING REMARKS ---
+    st.markdown(f"### 🏛️ Automated Executive Opening Remarks ({period_label})")
     
     st.markdown("#### 1. From the Desk of the Chairperson")
-    st.info(
-        "“Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy that I present this comprehensive executive performance report for the designated operational period. "
-        "Our association continues to stand as a formidable beacon of economic self-reliance, unity, and mutual empowerment. Over this reporting cycle, the executive committee has observed exemplary dedication from our members, whose consistent adherence to our constitution and savings milestones ensures that SMAHOSA remains resilient against broader macroeconomic pressures. "
-        "As we expand our digital architecture and streamline accountability through this management portal, our collective objective remains unwavering: fostering sustainable financial growth, supporting one another through life's eventualities under Article IV provisions, and preserving the noble values instilled in us during our formative years at St. Mary's High School. "
-        "We urge all members to maintain this high standard of participation as we look forward to upcoming investment phases.”"
-    )
+    st.info(chairperson_speech)
     
     st.markdown("#### 2. Statement from the Finance Officer")
-    st.info(
-        "“Fellow members, financial transparency and rigorous fiscal discipline are the absolute bedrock of our savings cooperative. During this period, all capital inflows, mandatory non-refundable registration fees, annual subscriptions, and refundable savings deposits have been meticulously reconciled and securely deposited into our official institutional account with Pride Microfinance. "
-        "Our liquidity position remains exceptionally robust. The figures reflected in this report directly correlate with scheduled member contributions, timely penalty enforcement, and structured payment channels. "
-        "Our cumulative savings pool has experienced steady upward trajectory due to zero-tolerance policies regarding unallocated funds and strict chronological ledger logging. We continue to optimize our yield strategies while maintaining absolute security of every member's capital. Detailed audits remain accessible to all fully compliant members upon formal request.”"
-    )
+    st.info(finance_speech)
     
     st.markdown("#### 3. Address from the Vice Chairperson")
-    st.info(
-        "“Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of hardship and celebration. The Vice Chairperson's office, in close collaboration with the welfare and disciplinary committees, has maintained active oversight on member engagement, attendance, and pastoral support. "
-        "This reporting cycle reflects balanced participation across various alumni cohorts. Special commendations are extended to class representatives who have proactively bridged communication gaps and ensured that members facing temporary professional or personal transitions are accommodated through our confidential grace period frameworks without feeling alienated from our core mission. "
-        "Let us continue to uphold this culture of compassionate accountability as we build a legacy that transcends generations.”"
-    )
+    st.info(vice_chair_speech)
 
     st.markdown("---")
     
@@ -582,13 +627,12 @@ elif menu == "📈 Executive Reports":
         st.success(
             f"**Comprehensive Figure Explanation:** During the reporting window of **{period_label}**, the association registered a total cash mobilization of **UGX {total_period_savings:,}** spanning across **{total_transactions_count}** distinct ledger entries. "
             "These figures arose primarily due to scheduled monthly savings deposits meeting maturity deadlines before the banking cutoff date with Pride Microfinance. "
-            "Subscription spikes observed in this cycle correspond directly with cohort mobilization drives led by class representatives, while mandatory non-refundable fees remained stable, reflecting baseline compliance among newly integrated members. "
-            "No unexplained variances or ledger discrepancies were noted during the reconciliation process."
+            "Subscription spikes observed in this cycle correspond directly with cohort mobilization drives led by class representatives, while mandatory non-refundable fees remained stable, reflecting baseline compliance among newly integrated members."
         )
     else:
         st.warning(
             f"**Comprehensive Figure Explanation:** For the reporting window of **{period_label}**, the recorded financial influx stands at **UGX 0**, with zero transactions logged. "
-            "This occurrence is attributed to inter-cycle payment windows where members consolidate their contributions ahead of quarterly deadlines, or administrative delays in batch-uploading physical bank slips into the portal database. Executive follow-up is ongoing."
+            "This occurrence is attributed to inter-cycle payment windows where members consolidate their contributions ahead of quarterly deadlines, or administrative delays in batch-uploading physical bank slips into the portal database."
         )
 
     st.markdown("#### 📑 Detailed Transaction Log Table")
@@ -599,7 +643,6 @@ elif menu == "📈 Executive Reports":
     st.markdown("The breakdown below illustrates the exact percentage distribution of funds mobilized across different contribution categories for the selected reporting period.")
     
     if not filtered_tx.empty:
-        pie_data = filtered_tx.groupby("Category")["Amount (UGX)"].sum().reset_index()
         st.altair_chart(
             __import__('altair').Chart(pie_data).mark_arc(innerRadius=50).encode(
                 theta=__import__('altair').Theta(field="Amount (UGX)", type="quantitative"),
