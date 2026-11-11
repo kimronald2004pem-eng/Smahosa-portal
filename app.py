@@ -22,7 +22,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH ADVANCED PRINT HIDE (HIDDEN BUTTONS/FORMS) ---
+# --- CLEAN EXECUTIVE STYLING WITH PRINT OPTIMIZATION ---
 css_template = """
     <style>
     .main {
@@ -90,7 +90,7 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- ADVANCED PRINT HIDE: REMOVES SIDEBAR, BUTTONS, & ADMIN FORMS FROM PDF/PRINT --- */
+    /* --- ADVANCED PRINT OPTIMIZATION FOR BULKY REPORTS --- */
     @media print {
         [data-testid="stSidebar"] {
             display: none !important;
@@ -118,6 +118,18 @@ css_template = """
         }
         .main {
             background-color: #ffffff !important;
+        }
+
+        /* Prevent orphan headings and awkward page splits */
+        h1, h2, h3, h4 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+        
+        /* Keep info boxes and tables intact across pages */
+        .stAlert, table, tr, td, th {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
     }
     </style>
@@ -508,7 +520,6 @@ elif menu == "📈 Executive Reports":
     
     if not filtered_tx.empty:
         pie_data = filtered_tx.groupby("Category")["Amount (UGX)"].sum().reset_index()
-        # Render a clean proportional view using Streamlit native charts or metrics breakdown
         st.altair_chart(
             __import__('altair').Chart(pie_data).mark_arc(innerRadius=50).encode(
                 theta=__import__('altair').Theta(field="Amount (UGX)", type="quantitative"),
