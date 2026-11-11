@@ -21,7 +21,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH PRINT HIDE FOR SIDEBAR ---
+# --- CLEAN EXECUTIVE STYLING WITH GLOBAL PRINT HIDE FOR ALL PAGES ---
 css_template = """
     <style>
     .main {
@@ -89,7 +89,7 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- HIDE SIDEBAR & CONTROLS AUTOMATICALLY WHEN PRINTING --- */
+    /* --- GLOBAL PRINT HIDE: APPLIES TO ALL PAGES & VIEWS --- */
     @media print {
         [data-testid="stSidebar"] {
             display: none !important;
@@ -97,8 +97,14 @@ css_template = """
         header {
             display: none !important;
         }
-        .stButton, form {
-            break-inside: avoid;
+        .stToolbar {
+            display: none !important;
+        }
+        footer {
+            display: none !important;
+        }
+        .main {
+            background-color: #ffffff !important;
         }
     }
     </style>
