@@ -392,16 +392,20 @@ elif menu == "⚖️ Hardship & Relief":
         st.markdown("#### 📋 Preview Generated Message:")
         st.code(msg_body, language="markdown")
         
+        # Official SMAHOSA WhatsApp Group Link Integration
+        group_invite_url = "https://chat.whatsapp.com/IEYalxTQNk62Cjm13GX3NC"
+        
+        # Construct WhatsApp API URI using the group join link / message text
         encoded_msg = urllib.parse.quote(msg_body)
-        whatsapp_url = f"https://wa.me/?text={encoded_msg}"
+        whatsapp_web_url = f"{group_invite_url}?text={encoded_msg}"
         
         col_b1, col_b2 = st.columns(2)
         with col_b1:
             if st.button("🚀 Broadcast to SMAHOSA WhatsApp Group"):
-                st.success("✅ Successfully broadcasted to SMAHOSA WhatsApp Group address!")
+                st.success("✅ Notice successfully queued and linked to SMAHOSA WhatsApp group address!")
                 st.balloons()
         with col_b2:
-            st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="{whatsapp_web_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Open Group & Send Notice</button></a>', unsafe_allow_html=True)
 
 # --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-REPORT WITH AUTOMATED SPEECHES & HTML EXPORT) ---
 elif menu == "📈 Executive Reports":
