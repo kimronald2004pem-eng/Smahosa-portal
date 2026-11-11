@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import base64
 from datetime import datetime
+import urllib.parse
 
 # Page Configuration
 st.set_page_config(
@@ -103,7 +104,6 @@ css_template = """
         footer {
             display: none !important;
         }
-        /* Hides download buttons, tabs, and bottom input/add/delete forms when printing */
         .stDownloadButton, [data-testid="stDownloadButton"] {
             display: none !important;
         }
@@ -273,7 +273,6 @@ elif menu == "👥 Alumni Directory":
             st.write("### Edit Existing Alumnus Information")
             selected_member_str = st.selectbox("Select Member to Update", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"], key="edit_member_select")
             
-            # Extract selected member ID
             selected_m_id = selected_member_str.split(" - ")[0]
             member_row = st.session_state.members[st.session_state.members["Member ID"] == selected_m_id].iloc[0]
             
@@ -370,18 +369,56 @@ elif menu == "💰 Financial Ledger":
                 st.success(f"Successfully deleted transaction {selected_tx_id}!")
                 st.rerun()
 
-# --- VIEW 4: HARDSHIP & RELIEF ---
+# --- VIEW 4: HARDSHIP & RELIEF (WITH WHATSAPP BROADCAST GENERATOR) ---
 elif menu == "⚖️ Hardship & Relief":
-    st.subheader("⚖️ Confidential Hardship & Relief Log")
-    st.info("Article IV: Formal written grace period petitions submitted to the Chairperson remain strictly confidential.")
+    st.subheader("⚖️ Confidential Hardship, Absence & Relief Log")
+    st.info("Article IV: Formal written grace period petitions submitted to the Chairperson remain strictly confidential. Authorized executives can also generate formal absence and notice broadcasts for the SMAHOSA WhatsApp group.")
     
-    with st.form("hardship_form"):
-        st.write("### Submit Grace Period Petition")
-        petition_member = st.selectbox("Select Member", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"])
-        reason = st.text_area("Confidential Reason / Notes")
-        petition_submitted = st.form_submit_button("Submit Petition to Chairperson")
-        if petition_submitted:
-            st.success("Petition securely logged. Account flagged for temporary relief grace period under Article IV.")
+    tab_h1, tab_h2 = st.tabs(["📝 Confidential Log / Petition", "📢 WhatsApp Executive Broadcast Generator"])
+    
+    with tab_h1:
+        with st.form("hardship_form"):
+            st.write("### Submit Grace Period Petition")
+            petition_member = st.selectbox("Select Member", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"])
+            reason = st.text_area("Confidential Reason / Notes")
+            petition_submitted = st.form_submit_button("Submit Petition to Chairperson")
+            if petition_submitted:
+                st.success("Petition securely logged. Account flagged for temporary relief grace period under Article IV.")
+                
+    with tab_h2:
+        st.write("### 📲 Automated SMAHOSA WhatsApp Group Notice")
+        st.markdown("Draft and approve official announcements regarding member absence, apologies, or grace periods for instant broadcast to the SMAHOSA WhatsApp group.")
+        
+        broadcast_member = st.selectbox("Select Alumnus for Notice", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"], key="bc_member")
+        notice_type = st.selectbox("Notice Category", [
+            "Official Absence & Apology (Reason Disclosed)", 
+            "Official Absence (Personal / Confidential Grounds)", 
+            "Article IV Grace Period Approved"
+        ])
+        custom_note = st.text_area("Additional Details / Remarks (Optional)", placeholder="e.g., Attending family matters, expected back next meeting.")
+        
+        selected_name = broadcast_member.split(" - ")[1]
+        
+        if notice_type == "Official Absence & Apology (Reason Disclosed)":
+            msg_body = f"🏛️ *SMAHOSA EXECUTIVE NOTICE*\n\nDear OBs and OGs,\n\nPlease be informed that our fellow member, *{selected_name}*, has tendered an official apology for absence from recent engagements due to: _{custom_note if custom_note else 'official commitments'}_.\n\nThe executive has noted this and extended our best regards.\n\n*Office of the Publicity Officer & Chairperson*"
+        elif notice_type == "Official Absence (Personal / Confidential Grounds)":
+            msg_body = f"🏛️ *SMAHOSA EXECUTIVE NOTICE*\n\nDear OBs and OGs,\n\nKindly note that our fellow member, *{selected_name}*, will be unavailable for upcoming group activities on personal grounds. The executive is in touch and sends best wishes.\n\n*Office of the Publicity Officer & Chairperson*"
+        else:
+            msg_body = f"🏛️ *SMAHOSA ARTICLE IV NOTICE*\n\nDear OBs and OGs,\n\nPlease note that an official grace period has been granted to *{selected_name}* under Article IV of the SMAHOSA Constitution.\n\n*Office of the Chairperson*"
+
+        st.markdown("#### 📋 Preview Generated Message:")
+        st.code(msg_body, language="markdown")
+        
+        encoded_msg = urllib.parse.quote(msg_body)
+        whatsapp_url = f"https://wa.me/?text={encoded_msg}"
+        
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("🚀 Broadcast to SMAHOSA WhatsApp Group"):
+                st.success("✅ Successfully broadcasted to SMAHOSA WhatsApp Group address!")
+                st.balloons()
+        with col_b2:
+            st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
 # --- CLOSE WATERMARK CONTAINER ---
 st.markdown('</div>', unsafe_allow_html=True)
