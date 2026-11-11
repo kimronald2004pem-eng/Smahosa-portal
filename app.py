@@ -396,7 +396,7 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH PRINT/PDF TRIGGER) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH NATIVE HTML DOWNLOAD) ---
 elif menu == "📈 Executive Reports":
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
     st.markdown("Detailed institutional performance report, complete with formal executive statements, financial variance explanations, relief logs, and proportional distribution analytics.")
@@ -423,7 +423,7 @@ elif menu == "📈 Executive Reports":
 
     st.markdown("---")
     
-    # --- 1-CLICK PRINT / SAVE TO PDF BUTTON (HTML DATA URI) ---
+    # --- GENERATE CLEAN STANDALONE HTML REPORT FOR DOWNLOAD ---
     total_period_savings = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
     total_transactions_count = len(filtered_tx)
 
@@ -431,19 +431,28 @@ elif menu == "📈 Executive Reports":
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="utf-8">
         <title>SMAHOSA Executive Report - {period_label}</title>
         <style>
-            body {{ font-family: 'Segoe UI', Arial, sans-serif; color: #1b263b; padding: 30px; line-height: 1.6; }}
+            body {{ font-family: 'Segoe UI', Arial, sans-serif; color: #1b263b; padding: 40px; line-height: 1.6; background: #ffffff; }}
             h1, h2, h3 {{ color: #0d1b2a; }}
             .header {{ text-align: center; border-bottom: 3px solid #e0a96d; padding-bottom: 15px; margin-bottom: 30px; }}
-            .section {{ margin-bottom: 25px; page-break-inside: avoid; }}
+            .section {{ margin-bottom: 30px; page-break-inside: avoid; }}
             table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
             th, td {{ border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 14px; }}
             th {{ background-color: #1b263b; color: white; }}
             .metric-box {{ background: #f8fafc; border-left: 5px solid #1b263b; padding: 15px; margin: 15px 0; }}
+            @media print {{
+                body {{ padding: 10px; }}
+                button {{ display: none !important; }}
+            }}
         </style>
     </head>
     <body>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button onclick="window.print()" style="background-color:#1b263b; color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px;">🖨️ Print / Save as PDF</button>
+        </div>
+
         <div class="header">
             <h1>SMAHOSA Savings Group Portal</h1>
             <h3>St. Mary's High School Old Boys & Old Girls Official Management System</h3>
@@ -522,11 +531,14 @@ elif menu == "📈 Executive Reports":
     </html>
     """
 
-    b64_html = base64.b64encode(html_report_content.encode('utf-8')).decode('utf-8')
-    pdf_download_url = f'<a href="data:text/html;base64,{b64_html}" target="_blank"><button style="background-color:#1b263b; color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px; width:100%;">📥 Open Official Printable / PDF Report View</button></a>'
-    
-    st.markdown(pdf_download_url, unsafe_allow_html=True)
-    st.caption("💡 Clicking this button opens a clean, dedicated executive report page. Once open, simply press `Ctrl + P` to save as a multi-page PDF or print instantly.")
+    st.download_button(
+        label="📥 Download Official Printable / PDF Executive Report (HTML)",
+        data=html_report_content,
+        file_name=f"SMAHOSA_Executive_Report_{period_label.replace(' ', '_')}.html",
+        mime="text/html",
+        type="primary"
+    )
+    st.caption("💡 Clicking this button downloads a clean executive report file to your device. When you open that downloaded file, it displays a **'Print / Save as PDF'** button right at the top for flawless multi-page printing!")
 
     st.markdown("---")
     
