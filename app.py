@@ -21,14 +21,13 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH WATERMARK CONTAINER ---
+# --- CLEAN EXECUTIVE STYLING WITH PRINT HIDE FOR SIDEBAR ---
 css_template = """
     <style>
     .main {
         background-color: #f4f7f6;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    /* Watermark container wrapper */
     .watermark-box {
         position: relative;
         background-image: url("data:image/png;base64,REPLACE_BASE64");
@@ -89,6 +88,19 @@ css_template = """
     .stAlert {
         border-radius: 8px;
     }
+
+    /* --- HIDE SIDEBAR & CONTROLS AUTOMATICALLY WHEN PRINTING --- */
+    @media print {
+        [data-testid="stSidebar"] {
+            display: none !important;
+        }
+        header {
+            display: none !important;
+        }
+        .stButton, form {
+            break-inside: avoid;
+        }
+    }
     </style>
 """
 st.markdown(css_template.replace("REPLACE_BASE64", badge_base64), unsafe_allow_html=True)
@@ -103,7 +115,6 @@ def check_password():
         else:
             st.session_state["password_correct"] = False
 
-    # Single Official Badge on Login Screen Only
     col_l, col_m, col_r = st.columns([2, 2, 2])
     with col_m:
         if os.path.exists("badge.jpg.png"):
@@ -137,7 +148,7 @@ if not check_password():
 # --- WRAP DASHBOARD CONTENT IN WATERMARK CONTAINER ---
 st.markdown('<div class="watermark-box">', unsafe_allow_html=True)
 
-# --- DISPLAY SINGLE HEADER CARD (NO DUPLICATE IMAGE BELOW IT) ---
+# --- DISPLAY SINGLE HEADER CARD ---
 st.markdown("""
     <div class="header-card">
         <h1>SMAHOSA Savings Group Portal</h1>
