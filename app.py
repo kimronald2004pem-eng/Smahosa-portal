@@ -21,10 +21,9 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- ADVANCED CUSTOM CSS WITH SUBTLE WATERMARK & COLORED UI ---
-st.markdown(f"""
+# --- SAFE CSS STYLING WITH WATERMARK ---
+css_content = f"""
     <style>
-    /* Global Background with Subtle Badge Watermark */
     .main {{
         background-color: #f0f4f8;
         background-image: linear-gradient(rgba(240, 244, 248, 0.96), rgba(240, 244, 248, 0.96)), url("data:image/png;base64,{badge_base64}");
@@ -34,8 +33,6 @@ st.markdown(f"""
         background-size: 30% auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    /* Header Card Styling */
     .header-card {{
         background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
         padding: 25px;
@@ -59,14 +56,10 @@ st.markdown(f"""
         letter-spacing: 0.5px;
         font-weight: 400;
     }}
-
-    /* Section Subheaders */
     h2, h3 {{
         color: #1b263b !important;
         font-weight: 600;
     }}
-
-    /* Metric Cards Styling */
     [data-testid="stMetric"] {{
         background-color: #ffffff;
         padding: 15px 20px;
@@ -84,20 +77,18 @@ st.markdown(f"""
         color: #0d1b2a !important;
         font-weight: 700;
     }}
-
-    /* Sidebar Styling */
     [data-testid="stSidebar"] {{
         background-color: #0d1b2a;
     }}
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {{
         color: #e0e1dd !important;
     }}
-    
     .stAlert {{
         border-radius: 8px;
     }}
     </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_content, unsafe_allow_html=True)
 
 # --- PASSWORD PROTECTION GATE WITH SINGLE TOP BADGE ---
 def check_password():
@@ -310,7 +301,7 @@ elif menu == "💰 Financial Ledger":
                     st.success("Transaction recorded successfully with exact date, month, and year tracking!")
                     st.rerun()
 
-    with tab_tx2:
+    with tab2:
         with st.form("remove_tx_form"):
             st.write("### Delete Transaction Record")
             target_tx = st.selectbox("Select Transaction ID to Remove", st.session_state.transactions["Tx ID"] + " (" + st.session_state.transactions["Category"] + " - UGX " + st.session_state.transactions["Amount (UGX)"].astype(str) + ")")
