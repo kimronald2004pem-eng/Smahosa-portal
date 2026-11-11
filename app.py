@@ -22,7 +22,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH PRINT OPTIMIZATION ---
+# --- CLEAN EXECUTIVE STYLING WITH MULTI-PAGE PRINT OPTIMIZATION ---
 css_template = """
     <style>
     .main {
@@ -90,7 +90,7 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- ADVANCED PRINT OPTIMIZATION FOR BULKY REPORTS --- */
+    /* --- ADVANCED MULTI-PAGE PRINT OPTIMIZATION --- */
     @media print {
         [data-testid="stSidebar"] {
             display: none !important;
@@ -116,8 +116,12 @@ css_template = """
         hr {
             display: none !important;
         }
-        .main {
+        
+        /* Force height expansion so printer renders all pages instead of squishing to 1 page */
+        .main, .watermark-box {
             background-color: #ffffff !important;
+            height: auto !important;
+            overflow: visible !important;
         }
 
         /* Prevent orphan headings and awkward page splits */
