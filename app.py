@@ -4,6 +4,7 @@ import os
 import base64
 from datetime import datetime
 import urllib.parse
+from fpdf import FPDF
 
 # Page Configuration
 st.set_page_config(
@@ -22,7 +23,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING (GLOBAL BASE) ---
+# --- CLEAN EXECUTIVE STYLING ---
 css_template = """
     <style>
     .main {
@@ -89,8 +90,6 @@ css_template = """
     .stAlert {
         border-radius: 8px;
     }
-
-    /* Standard print hide for general pages */
     @media print {
         [data-testid="stSidebar"], header, footer, .stToolbar {
             display: none !important;
@@ -105,9 +104,8 @@ st.markdown(css_template.replace("REPLACE_BASE64", badge_base64), unsafe_allow_h
 
 # --- PASSWORD PROTECTION GATE ---
 def check_password():
-    """Returns True if the user enters the correct password."""
     def password_entered():
-        if st.session_state["password"] == "smahosa2026":  # Official Access Password
+        if st.session_state["password"] == "smahosa2026":
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
@@ -399,41 +397,8 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH DIRECT PDF DOWNLOAD) ---
 elif menu == "📈 Executive Reports":
-    # --- INJECT MULTI-PAGE UNRESTRICTED PRINT OVERRIDE ONLY FOR REPORTS ---
-    report_print_override = """
-        <style>
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 12mm;
-            }
-            html, body, .stApp, [data-testid="stAppViewContainer"], .main, .block-container, .watermark-box {
-                height: auto !important;
-                min-height: auto !important;
-                max-height: none !important;
-                overflow: visible !important;
-                background-color: #ffffff !important;
-                float: none !important;
-                position: static !important;
-            }
-            [data-testid="stSidebar"], header, footer, .stToolbar, .stDownloadButton, [data-testid="stDownloadButton"], form, [data-testid="stForm"], .stTabs, hr, .stApp > header {
-                display: none !important;
-            }
-            h1, h2, h3, h4 {
-                page-break-after: avoid !important;
-                break-after: avoid !important;
-            }
-            .stAlert, table, tr, td, th {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-        }
-        </style>
-    """
-    st.markdown(report_print_override, unsafe_allow_html=True)
-
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
     st.markdown("Detailed institutional performance report, complete with formal executive statements, financial variance explanations, relief logs, and proportional distribution analytics.")
     
@@ -456,6 +421,90 @@ elif menu == "📈 Executive Reports":
                 (pd.to_datetime(st.session_state.transactions["Date"]) <= pd.to_datetime(end_date))
             ]
             period_label = f"Period: {start_date} to {end_date}"
+
+    st.markdown("---")
+    
+    # --- DEDICATED PDF DOWNLOAD GENERATOR BUTTON ---
+    class PDFReport(FPDF):
+        def header(self):
+            self.set_font('helvetica', 'B', 12)
+            self.cell(0, 10, "SMAHOSA SAVINGS GROUP - EXECUTIVE REPORT", 0, 1, 'C')
+            self.set_font('helvetica', '', 9)
+            self.cell(0, 5, f"Generated: {datetime.today().strftime('%Y-%m-%d')} | Period: {period_label}", 0, 1, 'C')
+            self.ln(5)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('helvetica', 'I', 8)
+            self.cell(0, 10, f"Page {self.page_no()}", 0, 0, 'C')
+
+    def generate_pdf_report():
+        pdf = PDFReport()
+        pdf.add_page()
+        pdf.set_font('helvetica', '', 10)
+
+        # Title
+        pdf.set_font('helvetica', 'B', 14)
+        pdf.cell(0, 10, f"Executive Report: {period_label}", 0, 1)
+        pdf.ln(3)
+
+        # Executive Remarks
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 8, "1. From the Desk of the Chairperson", 0, 1)
+        pdf.set_font('helvetica', '', 9)
+        pdf.multi_cell(0, 5, "Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy that I present this comprehensive executive performance report for the designated operational period. Our association continues to stand as a formidable beacon of economic self-reliance, unity, and mutual empowerment.")
+        pdf.ln(4)
+
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 8, "2. Statement from the Finance Officer", 0, 1)
+        pdf.set_font('helvetica', '', 9)
+        pdf.multi_cell(0, 5, "Fellow members, financial transparency and rigorous fiscal discipline are the absolute bedrock of our savings cooperative. All capital inflows, mandatory non-refundable registration fees, and refundable savings deposits have been meticulously reconciled and securely deposited with Pride Microfinance.")
+        pdf.ln(4)
+
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 8, "3. Address from the Vice Chairperson", 0, 1)
+        pdf.set_font('helvetica', '', 9)
+        pdf.multi_cell(0, 5, "Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of hardship and celebration under Article IV provisions.")
+        pdf.ln(6)
+
+        # Financial Summary
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 8, "Financial Summary & Variance Analysis", 0, 1)
+        pdf.set_font('helvetica', '', 9)
+        total_sav = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
+        pdf.multi_cell(0, 5, f"Total Mobilized Savings for Period: UGX {total_sav:,}\nTotal Transactions Recorded: {len(filtered_tx)}\n\nAnalysis: Figures reflect scheduled monthly savings deposits meeting maturity deadlines before banking cutoff dates with Pride Microfinance.")
+        pdf.ln(6)
+
+        # Transactions Table
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 8, "Transaction Log", 0, 1)
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.cell(30, 6, "Tx ID", 1)
+        pdf.cell(30, 6, "Member ID", 1)
+        pdf.cell(50, 6, "Category", 1)
+        pdf.cell(40, 6, "Amount (UGX)", 1)
+        pdf.cell(30, 6, "Date", 1)
+        pdf.ln()
+
+        pdf.set_font('helvetica', '', 8)
+        for _, row in filtered_tx.iterrows():
+            pdf.cell(30, 6, str(row["Tx ID"]), 1)
+            pdf.cell(30, 6, str(row["Member ID"]), 1)
+            pdf.cell(50, 6, str(row["Category"]), 1)
+            pdf.cell(40, 6, f"{row['Amount (UGX)']:,}", 1)
+            pdf.cell(30, 6, str(row["Date"]), 1)
+            pdf.ln()
+
+        return pdf.output(dest='S').encode('latin1')
+
+    pdf_bytes = generate_pdf_report()
+    st.download_button(
+        label="📥 Download Complete Executive Report (Official PDF)",
+        data=pdf_bytes,
+        file_name=f"SMAHOSA_Executive_Report_{period_label.replace(' ', '_')}.pdf",
+        mime="application/pdf",
+        type="primary"
+    )
 
     st.markdown("---")
     
@@ -541,9 +590,6 @@ elif menu == "📈 Executive Reports":
         {"Member Name": "Muwonge Sadat", "Category": "Article IV Grace Period", "Status": "Approved", "Remarks": "Confidential personal grounds; temporary relief granted."}
     ])
     st.dataframe(relief_sample, use_container_width=True)
-    
-    st.markdown("---")
-    st.info("💡 **Executive Export Tip:** To save this bulky, comprehensive multi-page report as a clean PDF complete with the official badge watermark, date, and page numbers, press **Ctrl + P** in your browser.")
 
 # --- CLOSE WATERMARK CONTAINER ---
 st.markdown('</div>', unsafe_allow_html=True)
