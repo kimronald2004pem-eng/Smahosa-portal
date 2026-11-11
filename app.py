@@ -21,17 +21,20 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- SAFE CSS STYLING WITH WATERMARK (NO F-STRING CONFLICTS) ---
+# --- CLEAN EXECUTIVE STYLING WITH WATERMARK CONTAINER ---
 css_template = """
     <style>
     .main {
-        background-color: #f0f4f8;
-        background-image: linear-gradient(rgba(240, 244, 248, 0.96), rgba(240, 244, 248, 0.96)), url("data:image/png;base64,REPLACE_BASE64");
+        background-color: #f4f7f6;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    /* Watermark container wrapper */
+    .watermark-box {
+        position: relative;
+        background-image: url("data:image/png;base64,REPLACE_BASE64");
         background-repeat: no-repeat;
         background-position: center;
-        background-attachment: fixed;
-        background-size: 30% auto;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-size: 25% auto;
     }
     .header-card {
         background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
@@ -90,7 +93,7 @@ css_template = """
 """
 st.markdown(css_template.replace("REPLACE_BASE64", badge_base64), unsafe_allow_html=True)
 
-# --- PASSWORD PROTECTION GATE WITH SINGLE TOP BADGE ---
+# --- PASSWORD PROTECTION GATE ---
 def check_password():
     """Returns True if the user enters the correct password."""
     def password_entered():
@@ -100,7 +103,7 @@ def check_password():
         else:
             st.session_state["password_correct"] = False
 
-    # Single Official Badge on Login Screen
+    # Single Official Badge on Login Screen Only
     col_l, col_m, col_r = st.columns([2, 2, 2])
     with col_m:
         if os.path.exists("badge.jpg.png"):
@@ -131,12 +134,10 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- DISPLAY SINGLE TOP BADGE & HEADER AFTER LOGIN ---
-col_left, col_mid, col_right = st.columns([2, 2, 2])
-with col_mid:
-    if os.path.exists("badge.jpg.png"):
-        st.image("badge.jpg.png", use_container_width=True)
+# --- WRAP DASHBOARD CONTENT IN WATERMARK CONTAINER ---
+st.markdown('<div class="watermark-box">', unsafe_allow_html=True)
 
+# --- DISPLAY SINGLE HEADER CARD (NO DUPLICATE IMAGE BELOW IT) ---
 st.markdown("""
     <div class="header-card">
         <h1>SMAHOSA Savings Group Portal</h1>
@@ -324,3 +325,6 @@ elif menu == "⚖️ Hardship & Relief":
         petition_submitted = st.form_submit_button("Submit Petition to Chairperson")
         if petition_submitted:
             st.success("Petition securely logged. Account flagged for temporary relief grace period under Article IV.")
+
+# --- CLOSE WATERMARK CONTAINER ---
+st.markdown('</div>', unsafe_allow_html=True)
