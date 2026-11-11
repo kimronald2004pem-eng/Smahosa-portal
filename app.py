@@ -22,7 +22,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH MULTI-PAGE PRINT OPTIMIZATION ---
+# --- CLEAN EXECUTIVE STYLING (GLOBAL BASE) ---
 css_template = """
     <style>
     .main {
@@ -90,50 +90,13 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- ADVANCED MULTI-PAGE PRINT OPTIMIZATION --- */
+    /* Standard print hide for general pages */
     @media print {
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"], header, footer, .stToolbar {
             display: none !important;
         }
-        header {
-            display: none !important;
-        }
-        .stToolbar {
-            display: none !important;
-        }
-        footer {
-            display: none !important;
-        }
-        .stDownloadButton, [data-testid="stDownloadButton"] {
-            display: none !important;
-        }
-        form, [data-testid="stForm"] {
-            display: none !important;
-        }
-        .stTabs {
-            display: none !important;
-        }
-        hr {
-            display: none !important;
-        }
-        
-        /* Force height expansion so printer renders all pages instead of squishing to 1 page */
-        .main, .watermark-box {
+        .main {
             background-color: #ffffff !important;
-            height: auto !important;
-            overflow: visible !important;
-        }
-
-        /* Prevent orphan headings and awkward page splits */
-        h1, h2, h3, h4 {
-            page-break-after: avoid !important;
-            break-after: avoid !important;
-        }
-        
-        /* Keep info boxes and tables intact across pages */
-        .stAlert, table, tr, td, th {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
         }
     }
     </style>
@@ -436,8 +399,41 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE WITH PIE CHARTS) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT) ---
 elif menu == "📈 Executive Reports":
+    # --- INJECT MULTI-PAGE UNRESTRICTED PRINT OVERRIDE ONLY FOR REPORTS ---
+    report_print_override = """
+        <style>
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm;
+            }
+            html, body, .stApp, [data-testid="stAppViewContainer"], .main, .block-container, .watermark-box {
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                background-color: #ffffff !important;
+                float: none !important;
+                position: static !important;
+            }
+            [data-testid="stSidebar"], header, footer, .stToolbar, .stDownloadButton, [data-testid="stDownloadButton"], form, [data-testid="stForm"], .stTabs, hr, .stApp > header {
+                display: none !important;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+            .stAlert, table, tr, td, th {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+        </style>
+    """
+    st.markdown(report_print_override, unsafe_allow_html=True)
+
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
     st.markdown("Detailed institutional performance report, complete with formal executive statements, financial variance explanations, relief logs, and proportional distribution analytics.")
     
