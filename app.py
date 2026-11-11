@@ -535,7 +535,7 @@ elif menu == "📈 Executive Reports":
         </div>
 
         <div class="section">
-            <h2>🥧 Proportional Category Distribution & Percentage Breakdown</h2>
+            <h2>🥧 Proportional Category Distribution & Percentage Breakdown (Pie Chart Analysis)</h2>
             <p>The breakdown below illustrates the exact percentage and monetary distribution of funds mobilized across different contribution categories for the selected reporting period.</p>
             <table>
                 <tr>
@@ -595,7 +595,7 @@ elif menu == "📈 Executive Reports":
         mime="text/html",
         type="primary"
     )
-    st.caption("💡 Clicking this button downloads a clean executive report file complete with automated executive speeches, financial analysis, proportional category distribution tables, and transaction logs. When opened, simply click the **'Print / Save as PDF'** button at the top!")
+    st.caption("💡 Clicking this button downloads a clean executive report file complete with automated executive speeches, financial analysis, proportional category distribution tables (pie chart breakdown), and transaction logs. When opened, simply click the **'Print / Save as PDF'** button at the top!")
 
     st.markdown("---")
     
