@@ -21,20 +21,29 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH ADVANCED PRINT HIDE (HIDDEN BUTTONS/FORMS) ---
+# --- CLEAN EXECUTIVE STYLING WITH MULTI-PAGE WATERMARK ---
 css_template = """
     <style>
+    @page {
+        size: auto;
+        margin: 15mm 10mm 15mm 10mm;
+    }
+    
     .main {
         background-color: #f4f7f6;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
+    /* Watermark container wrapper */
     .watermark-box {
         position: relative;
         background-image: url("data:image/png;base64,REPLACE_BASE64");
         background-repeat: no-repeat;
-        background-position: center;
-        background-size: 25% auto;
+        background-position: center 45%;
+        background-size: 30% auto;
+        min-height: 100vh;
     }
+
     .header-card {
         background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
         padding: 25px;
@@ -89,35 +98,29 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- ADVANCED PRINT HIDE: REMOVES SIDEBAR, BUTTONS, & ADMIN FORMS FROM PDF/PRINT --- */
+    /* --- PRINT STYLING FOR PDF EXPORT --- */
     @media print {
-        [data-testid="stSidebar"] {
-            display: none !important;
+        body, .main, .watermark-box {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-image: url("data:image/png;base64,REPLACE_BASE64") !important;
+            background-repeat: no-repeat !important;
+            background-position: center 45% !important;
+            background-size: 35% auto !important;
         }
-        header {
-            display: none !important;
-        }
-        .stToolbar {
-            display: none !important;
-        }
-        footer {
-            display: none !important;
-        }
-        /* Hides download buttons, tabs, and bottom input/add/delete forms when printing */
-        .stDownloadButton, [data-testid="stDownloadButton"] {
-            display: none !important;
-        }
-        form, [data-testid="stForm"] {
-            display: none !important;
-        }
-        .stTabs {
-            display: none !important;
-        }
+
+        /* Hide sidebar, action buttons, forms, and tabs during print */
+        [data-testid="stSidebar"], 
+        header, 
+        footer, 
+        .stToolbar,
+        .stDownloadButton, 
+        [data-testid="stDownloadButton"],
+        form, 
+        [data-testid="stForm"],
+        .stTabs, 
         hr {
             display: none !important;
-        }
-        .main {
-            background-color: #ffffff !important;
         }
     }
     </style>
