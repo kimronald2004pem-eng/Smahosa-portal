@@ -235,7 +235,7 @@ elif menu == "👥 Alumni Directory":
     )
     
     st.markdown("---")
-    tab1, tab2 = st.tabs(["➕ Add New Member", "🗑️ Remove Member"])
+    tab1, tab2, tab3 = st.tabs(["➕ Add New Member", "✏️ Edit / Update Member", "🗑️ Remove Member"])
     
     with tab1:
         with st.form("add_member_form"):
@@ -269,6 +269,33 @@ elif menu == "👥 Alumni Directory":
                     st.rerun()
 
     with tab2:
+        with st.form("edit_member_form"):
+            st.write("### Edit Existing Alumnus Information")
+            selected_member_str = st.selectbox("Select Member to Update", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"], key="edit_member_select")
+            
+            # Extract selected member ID
+            selected_m_id = selected_member_str.split(" - ")[0]
+            member_row = st.session_state.members[st.session_state.members["Member ID"] == selected_m_id].iloc[0]
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                edit_name = st.text_input("Full Name", value=member_row["Full Name"])
+                edit_phone = st.text_input("Phone Number", value=member_row["Phone"])
+            with c2:
+                edit_cohort = st.text_input("Alumni Cohort Year", value=member_row["Cohort"])
+                roles_list = ["Member", "Class Representative", "Executive Committee", "Chairperson", "Publicity Officer"]
+                default_role_idx = roles_list.index(member_row["Role"]) if member_row["Role"] in roles_list else 0
+                edit_role = st.selectbox("Role / Position", roles_list, index=default_role_idx)
+                
+            edit_status = st.selectbox("Membership Status", ["Active", "Inactive", "Grace Period"], index=0 if member_row["Status"] == "Active" else 1)
+            
+            update_submitted = st.form_submit_button("Update Member Information")
+            if update_submitted:
+                st.session_state.members.loc[st.session_state.members["Member ID"] == selected_m_id, ["Full Name", "Phone", "Cohort", "Role", "Status"]] = [edit_name, edit_phone, edit_cohort, edit_role, edit_status]
+                st.success(f"Successfully updated record for {edit_name}!")
+                st.rerun()
+
+    with tab3:
         with st.form("remove_member_form"):
             st.write("### Remove an Alumnus Record")
             target_member = st.selectbox("Select Member to Remove", st.session_state.members["Member ID"] + " - " + st.session_state.members["Full Name"])
