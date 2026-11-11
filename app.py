@@ -4,7 +4,6 @@ import os
 import base64
 from datetime import datetime
 import urllib.parse
-from fpdf import FPDF
 
 # Page Configuration
 st.set_page_config(
@@ -397,7 +396,7 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH DIRECT PDF DOWNLOAD) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-PAGE REPORT WITH PRINT/PDF TRIGGER) ---
 elif menu == "📈 Executive Reports":
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
     st.markdown("Detailed institutional performance report, complete with formal executive statements, financial variance explanations, relief logs, and proportional distribution analytics.")
@@ -424,87 +423,110 @@ elif menu == "📈 Executive Reports":
 
     st.markdown("---")
     
-    # --- DEDICATED PDF DOWNLOAD GENERATOR BUTTON ---
-    class PDFReport(FPDF):
-        def header(self):
-            self.set_font('helvetica', 'B', 12)
-            self.cell(0, 10, "SMAHOSA SAVINGS GROUP - EXECUTIVE REPORT", 0, 1, 'C')
-            self.set_font('helvetica', '', 9)
-            self.cell(0, 5, f"Generated: {datetime.today().strftime('%Y-%m-%d')} | Period: {period_label}", 0, 1, 'C')
-            self.ln(5)
+    # --- 1-CLICK PRINT / SAVE TO PDF BUTTON (HTML DATA URI) ---
+    total_period_savings = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
+    total_transactions_count = len(filtered_tx)
 
-        def footer(self):
-            self.set_y(-15)
-            self.set_font('helvetica', 'I', 8)
-            self.cell(0, 10, f"Page {self.page_no()}", 0, 0, 'C')
+    html_report_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SMAHOSA Executive Report - {period_label}</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Arial, sans-serif; color: #1b263b; padding: 30px; line-height: 1.6; }}
+            h1, h2, h3 {{ color: #0d1b2a; }}
+            .header {{ text-align: center; border-bottom: 3px solid #e0a96d; padding-bottom: 15px; margin-bottom: 30px; }}
+            .section {{ margin-bottom: 25px; page-break-inside: avoid; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+            th, td {{ border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 14px; }}
+            th {{ background-color: #1b263b; color: white; }}
+            .metric-box {{ background: #f8fafc; border-left: 5px solid #1b263b; padding: 15px; margin: 15px 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>SMAHOSA Savings Group Portal</h1>
+            <h3>St. Mary's High School Old Boys & Old Girls Official Management System</h3>
+            <p><b>Executive Performance Report</b> | Period: {period_label}</p>
+        </div>
 
-    def generate_pdf_report():
-        pdf = PDFReport()
-        pdf.add_page()
-        pdf.set_font('helvetica', '', 10)
+        <div class="section">
+            <h2>🏛️ Full-Page Executive Opening Remarks</h2>
+            
+            <h3>1. From the Desk of the Chairperson</h3>
+            <p>“Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy that I present this comprehensive executive performance report for the designated operational period. Our association continues to stand as a formidable beacon of economic self-reliance, unity, and mutual empowerment. Over this reporting cycle, the executive committee has observed exemplary dedication from our members, whose consistent adherence to our constitution and savings milestones ensures that SMAHOSA remains resilient against broader macroeconomic pressures. As we expand our digital architecture and streamline accountability through this management portal, our collective objective remains unwavering: fostering sustainable financial growth, supporting one another through life's eventualities under Article IV provisions, and preserving the noble values instilled in us during our formative years at St. Mary's High School.”</p>
+            
+            <h3>2. Statement from the Finance Officer</h3>
+            <p>“Fellow members, financial transparency and rigorous fiscal discipline are the absolute bedrock of our savings cooperative. During this period, all capital inflows, mandatory non-refundable registration fees, annual subscriptions, and refundable savings deposits have been meticulously reconciled and securely deposited into our official institutional account with Pride Microfinance. Our liquidity position remains exceptionally robust. The figures reflected in this report directly correlate with scheduled member contributions, timely penalty enforcement, and structured payment channels.”</p>
+            
+            <h3>3. Address from the Vice Chairperson</h3>
+            <p>“Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of hardship and celebration. The Vice Chairperson's office, in close collaboration with the welfare and disciplinary committees, has maintained active oversight on member engagement, attendance, and pastoral support. Special commendations are extended to class representatives who have proactively bridged communication gaps and ensured that members facing temporary professional or personal transitions are accommodated through our confidential grace period frameworks.”</p>
+        </div>
 
-        # Title
-        pdf.set_font('helvetica', 'B', 14)
-        pdf.cell(0, 10, f"Executive Report: {period_label}", 0, 1)
-        pdf.ln(3)
+        <div class="section">
+            <h2>📊 Comprehensive Report Summary & Financial Breakdown</h2>
+            <div class="metric-box">
+                <p><b>Period Influx:</b> UGX {total_period_savings:,}</p>
+                <p><b>Recorded Transactions:</b> {total_transactions_count}</p>
+            </div>
+            <h3>Detailed Financial Variance & Figure Analysis</h3>
+            <p>During the reporting window of <b>{period_label}</b>, the association registered a total cash mobilization of <b>UGX {total_period_savings:,}</b> spanning across <b>{total_transactions_count}</b> distinct ledger entries. These figures arose primarily due to scheduled monthly savings deposits meeting maturity deadlines before the banking cutoff date with Pride Microfinance. No unexplained variances or ledger discrepancies were noted.</p>
+        </div>
 
-        # Executive Remarks
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.cell(0, 8, "1. From the Desk of the Chairperson", 0, 1)
-        pdf.set_font('helvetica', '', 9)
-        pdf.multi_cell(0, 5, "Esteemed Old Boys and Old Girls of St. Mary's High School, it is with profound pride and deep commitment to our shared legacy that I present this comprehensive executive performance report for the designated operational period. Our association continues to stand as a formidable beacon of economic self-reliance, unity, and mutual empowerment.")
-        pdf.ln(4)
+        <div class="section">
+            <h2>📑 Detailed Transaction Log Table</h2>
+            <table>
+                <tr>
+                    <th>Tx ID</th>
+                    <th>Member ID</th>
+                    <th>Category</th>
+                    <th>Amount (UGX)</th>
+                    <th>Date</th>
+                </tr>
+    """
+    
+    if not filtered_tx.empty:
+        for _, r in filtered_tx.iterrows():
+            html_report_content += f"<tr><td>{r['Tx ID']}</td><td>{r['Member ID']}</td><td>{r['Category']}</td><td>{r['Amount (UGX)']:,}</td><td>{r['Date']}</td></tr>"
+    else:
+        html_report_content += "<tr><td colspan='5' style='text-align:center;'>No transactions recorded for this period.</td></tr>"
 
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.cell(0, 8, "2. Statement from the Finance Officer", 0, 1)
-        pdf.set_font('helvetica', '', 9)
-        pdf.multi_cell(0, 5, "Fellow members, financial transparency and rigorous fiscal discipline are the absolute bedrock of our savings cooperative. All capital inflows, mandatory non-refundable registration fees, and refundable savings deposits have been meticulously reconciled and securely deposited with Pride Microfinance.")
-        pdf.ln(4)
+    html_report_content += """
+            </table>
+        </div>
 
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.cell(0, 8, "3. Address from the Vice Chairperson", 0, 1)
-        pdf.set_font('helvetica', '', 9)
-        pdf.multi_cell(0, 5, "Dear brothers and sisters, true community is measured not merely by monetary figures, but by our unwavering solidarity during times of hardship and celebration under Article IV provisions.")
-        pdf.ln(6)
+        <div class="section">
+            <h2>⚖️ Relief, Apologies & Absence Comprehensive Report</h2>
+            <table>
+                <tr>
+                    <th>Member Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+                <tr>
+                    <td>Mulindwa Laurence</td>
+                    <td>Official Apology</td>
+                    <td>Noted & Cleared</td>
+                    <td>Excused due to official institutional commitments.</td>
+                </tr>
+                <tr>
+                    <td>Muwonge Sadat</td>
+                    <td>Article IV Grace Period</td>
+                    <td>Approved</td>
+                    <td>Confidential personal grounds; temporary relief granted.</td>
+                </tr>
+            </table>
+        </div>
+    </body>
+    </html>
+    """
 
-        # Financial Summary
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.cell(0, 8, "Financial Summary & Variance Analysis", 0, 1)
-        pdf.set_font('helvetica', '', 9)
-        total_sav = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
-        pdf.multi_cell(0, 5, f"Total Mobilized Savings for Period: UGX {total_sav:,}\nTotal Transactions Recorded: {len(filtered_tx)}\n\nAnalysis: Figures reflect scheduled monthly savings deposits meeting maturity deadlines before banking cutoff dates with Pride Microfinance.")
-        pdf.ln(6)
-
-        # Transactions Table
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.cell(0, 8, "Transaction Log", 0, 1)
-        pdf.set_font('helvetica', 'B', 8)
-        pdf.cell(30, 6, "Tx ID", 1)
-        pdf.cell(30, 6, "Member ID", 1)
-        pdf.cell(50, 6, "Category", 1)
-        pdf.cell(40, 6, "Amount (UGX)", 1)
-        pdf.cell(30, 6, "Date", 1)
-        pdf.ln()
-
-        pdf.set_font('helvetica', '', 8)
-        for _, row in filtered_tx.iterrows():
-            pdf.cell(30, 6, str(row["Tx ID"]), 1)
-            pdf.cell(30, 6, str(row["Member ID"]), 1)
-            pdf.cell(50, 6, str(row["Category"]), 1)
-            pdf.cell(40, 6, f"{row['Amount (UGX)']:,}", 1)
-            pdf.cell(30, 6, str(row["Date"]), 1)
-            pdf.ln()
-
-        return pdf.output(dest='S').encode('latin1')
-
-    pdf_bytes = generate_pdf_report()
-    st.download_button(
-        label="📥 Download Complete Executive Report (Official PDF)",
-        data=pdf_bytes,
-        file_name=f"SMAHOSA_Executive_Report_{period_label.replace(' ', '_')}.pdf",
-        mime="application/pdf",
-        type="primary"
-    )
+    b64_html = base64.b64encode(html_report_content.encode('utf-8')).decode('utf-8')
+    pdf_download_url = f'<a href="data:text/html;base64,{b64_html}" target="_blank"><button style="background-color:#1b263b; color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px; width:100%;">📥 Open Official Printable / PDF Report View</button></a>'
+    
+    st.markdown(pdf_download_url, unsafe_allow_html=True)
+    st.caption("💡 Clicking this button opens a clean, dedicated executive report page. Once open, simply press `Ctrl + P` to save as a multi-page PDF or print instantly.")
 
     st.markdown("---")
     
@@ -537,9 +559,6 @@ elif menu == "📈 Executive Reports":
     
     # --- FINANCIAL & STATISTICAL SUMMARY ---
     st.markdown(f"### 📊 Comprehensive Report Summary & Financial Breakdown ({period_label})")
-    
-    total_period_savings = filtered_tx[filtered_tx["Category"] == "Savings Deposit"]["Amount (UGX)"].sum() if not filtered_tx.empty else 0
-    total_transactions_count = len(filtered_tx)
     
     col_m1, col_m2 = st.columns(2)
     col_m1.metric("Period Influx (UGX)", f"{total_period_savings:,}")
