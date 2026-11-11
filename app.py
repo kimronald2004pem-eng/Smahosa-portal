@@ -22,7 +22,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING (GLOBAL) ---
+# --- CLEAN EXECUTIVE STYLING & STRICT NON-REPORT PRINT SUPPRESSION ---
 css_template = """
     <style>
     .main {
@@ -88,6 +88,21 @@ css_template = """
     }
     .stAlert {
         border-radius: 8px;
+    }
+
+    /* Strict print hiding for all operational forms, sidebars, and navigation menus across non-report pages */
+    @media print {
+        [data-testid="stSidebar"], 
+        header, 
+        footer, 
+        .stToolbar, 
+        form, 
+        [data-testid="stForm"], 
+        .stTabs, 
+        .stDownloadButton, 
+        [data-testid="stDownloadButton"] {
+            display: none !important;
+        }
     }
     </style>
 """
@@ -388,7 +403,7 @@ elif menu == "⚖️ Hardship & Relief":
         with col_b2:
             st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">💬 Send via WhatsApp Web</button></a>', unsafe_allow_html=True)
 
-# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-REPORT WITH DEDICATED HTML DOWNLOAD BUTTON) ---
+# --- VIEW 5: EXECUTIVE REPORTS (BULKY, COMPREHENSIVE MULTI-REPORT WITH AUTOMATED SPEECHES & HTML EXPORT) ---
 elif menu == "📈 Executive Reports":
     st.subheader("📈 Comprehensive Executive & Monthly Reporting Engine")
     st.markdown("Detailed institutional performance report, complete with automated context-aware executive speeches, financial variance explanations, relief logs, and proportional distribution analytics.")
