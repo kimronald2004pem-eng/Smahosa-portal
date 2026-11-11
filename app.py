@@ -21,7 +21,7 @@ def get_base64_image(image_path):
 
 badge_base64 = get_base64_image("badge.jpg.png")
 
-# --- CLEAN EXECUTIVE STYLING WITH GLOBAL PRINT HIDE FOR ALL PAGES ---
+# --- CLEAN EXECUTIVE STYLING WITH ADVANCED PRINT HIDE (HIDDEN BUTTONS/FORMS) ---
 css_template = """
     <style>
     .main {
@@ -89,7 +89,7 @@ css_template = """
         border-radius: 8px;
     }
 
-    /* --- GLOBAL PRINT HIDE: APPLIES TO ALL PAGES & VIEWS --- */
+    /* --- ADVANCED PRINT HIDE: REMOVES SIDEBAR, BUTTONS, & ADMIN FORMS FROM PDF/PRINT --- */
     @media print {
         [data-testid="stSidebar"] {
             display: none !important;
@@ -101,6 +101,19 @@ css_template = """
             display: none !important;
         }
         footer {
+            display: none !important;
+        }
+        /* Hides download buttons, tabs, and bottom input/add/delete forms when printing */
+        .stDownloadButton, [data-testid="stDownloadButton"] {
+            display: none !important;
+        }
+        form, [data-testid="stForm"] {
+            display: none !important;
+        }
+        .stTabs {
+            display: none !important;
+        }
+        hr {
             display: none !important;
         }
         .main {
