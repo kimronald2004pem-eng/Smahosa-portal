@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import base64
 from datetime import datetime
 
 # Page Configuration
@@ -10,19 +11,34 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ADVANCED CUSTOM CSS FOR COLORED PAGES & TYPOGRAPHY ---
-st.markdown("""
+# --- CONVERT BADGE TO BASE64 FOR WATERMARK ---
+def get_base64_image(image_path):
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return ""
+
+badge_base64 = get_base64_image("badge.jpg.png")
+
+# --- ADVANCED CUSTOM CSS WITH SUBTLE WATERMARK & COLORED UI ---
+st.markdown(f"""
     <style>
-    /* Global Background & Font Styling */
-    .main {
+    /* Global Background with Subtle Badge Watermark */
+    .main {{
         background-color: #f0f4f8;
+        background-image: linear-gradient(rgba(240, 244, 248, 0.96), rgba(240, 244, 248, 0.96)), url("data:image/png;base64,{badge_base64}");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+        background-size: 30% auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     /* Header Card Styling */
-    .header-card {
+    .header-card {{
         background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
-        padding: 30px;
+        padding: 25px;
         border-radius: 14px;
         color: #ffffff;
         text-align: center;
@@ -30,61 +46,60 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(13, 27, 42, 0.2);
         border-bottom: 4px solid #e0a96d;
     }
-    .header-card h1 {
+    .header-card h1 {{
         color: #ffffff;
-        font-size: 2.2rem;
-        margin-bottom: 8px;
+        font-size: 2.1rem;
+        margin-bottom: 6px;
         font-weight: 700;
         letter-spacing: 0.5px;
     }
-    .header-card p {
+    .header-card p {{
         color: #e0e1dd;
-        font-size: 1.05rem;
+        font-size: 1rem;
         letter-spacing: 0.5px;
         font-weight: 400;
-    }
+    }}
 
     /* Section Subheaders */
-    h2, h3 {
+    h2, h3 {{
         color: #1b263b !important;
         font-weight: 600;
-    }
+    }}
 
     /* Metric Cards Styling */
-    [data-testid="stMetric"] {
+    [data-testid="stMetric"] {{
         background-color: #ffffff;
         padding: 15px 20px;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         border-left: 5px solid #1b263b;
-    }
-    [data-testid="stMetricLabel"] {
+    }}
+    [data-testid="stMetricLabel"] {{
         color: #415a77 !important;
         font-weight: 600;
         font-size: 0.95rem;
-    }
-    [data-testid="stMetricValue"] {
+    }}
+    [data-testid="stMetricValue"] {{
         font-size: 1.7rem;
         color: #0d1b2a !important;
         font-weight: 700;
-    }
+    }}
 
     /* Sidebar Styling */
-    [data-testid="stSidebar"] {
+    [data-testid="stSidebar"] {{
         background-color: #0d1b2a;
-    }
-    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {
+    }}
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown {{
         color: #e0e1dd !important;
-    }
+    }}
     
-    /* Custom Alert / Info Boxes */
-    .stAlert {
+    .stAlert {{
         border-radius: 8px;
-    }
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- PASSWORD PROTECTION GATE WITH BADGE ---
+# --- PASSWORD PROTECTION GATE WITH SINGLE TOP BADGE ---
 def check_password():
     """Returns True if the user enters the correct password."""
     def password_entered():
@@ -94,7 +109,7 @@ def check_password():
         else:
             st.session_state["password_correct"] = False
 
-    # Display Official Badge on Login Screen
+    # Single Official Badge on Login Screen
     col_l, col_m, col_r = st.columns([2, 2, 2])
     with col_m:
         if os.path.exists("badge.jpg.png"):
@@ -102,7 +117,7 @@ def check_password():
 
     if "password_correct" not in st.session_state:
         st.markdown("""
-            <div style="text-align: center; padding: 10px;">
+            <div style="text-align: center; padding: 15px;">
                 <h2 style="color: #1b263b;">SMAHOSA Management Portal</h2>
                 <p style="color: #415a77;">St. Mary's High School Old Students Association</p>
             </div>
@@ -112,7 +127,7 @@ def check_password():
         return False
     elif not st.session_state["password_correct"]:
         st.markdown("""
-            <div style="text-align: center; padding: 10px;">
+            <div style="text-align: center; padding: 15px;">
                 <h2 style="color: #1b263b;">SMAHOSA Management Portal</h2>
             </div>
         """, unsafe_allow_html=True)
@@ -125,7 +140,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- DISPLAY MAIN HEADER AFTER LOGIN ---
+# --- DISPLAY SINGLE TOP BADGE & HEADER AFTER LOGIN ---
 col_left, col_mid, col_right = st.columns([2, 2, 2])
 with col_mid:
     if os.path.exists("badge.jpg.png"):
