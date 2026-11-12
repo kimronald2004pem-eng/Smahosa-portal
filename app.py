@@ -304,7 +304,7 @@ elif menu == "💰 Financial Ledger":
     )
     
     st.markdown("---")
-    tab_tx1, tab_tx2 = st.tabs(["➕ Record Transaction", "🗑️ Delete Transaction"])
+    tab_tx1, tab_tx2, tab_tx3 = st.tabs(["➕ Record Transaction", "✏️ Edit / Update Transaction", "🗑️ Delete Transaction"])
     
     with tab_tx1:
         with st.form("add_tx_form"):
@@ -342,6 +342,35 @@ elif menu == "💰 Financial Ledger":
                     st.rerun()
 
     with tab_tx2:
+        with st.form("edit_tx_form"):
+            st.write("### Edit Existing Transaction Record")
+            selected_tx_str = st.selectbox("Select Transaction to Update", st.session_state.transactions["Tx ID"] + " - " + st.session_state.transactions["Category"] + " (UGX " + st.session_state.transactions["Amount (UGX)"].astype(str) + ")", key="edit_tx_select")
+            
+            selected_tx_id = selected_tx_str.split(" - ")[0]
+            tx_row = st.session_state.transactions[st.session_state.transactions["Tx ID"] == selected_tx_id].iloc[0]
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                edit_m_id = st.selectbox("Member ID", st.session_state.members["Member ID"], index=list(st.session_state.members["Member ID"]).index(tx_row["Member ID"]) if tx_row["Member ID"] in st.session_state.members["Member ID"].values else 0)
+                categories_list = ["Savings Deposit", "Membership Fee", "Annual Subscription"]
+                default_cat_idx = categories_list.index(tx_row["Category"]) if tx_row["Category"] in categories_list else 0
+                edit_category = st.selectbox("Category", categories_list, index=default_cat_idx)
+            with c2:
+                edit_amount = st.number_input("Amount (UGX)", min_value=1000, step=1000, value=int(tx_row["Amount (UGX)"]))
+                parsed_date = datetime.strptime(tx_row["Date"], "%Y-%m-%d").date() if "Date" in tx_row else datetime.today().date()
+                edit_tx_date = st.date_input("Transaction Date", value=parsed_date)
+                
+            update_tx_submitted = st.form_submit_button("Update Transaction Record")
+            if update_tx_submitted:
+                date_str = str(edit_tx_date)
+                month_str = edit_tx_date.strftime("%B")
+                year_val = edit_tx_date.year
+                
+                st.session_state.transactions.loc[st.session_state.transactions["Tx ID"] == selected_tx_id, ["Member ID", "Category", "Amount (UGX)", "Date", "Month", "Year"]] = [edit_m_id, edit_category, edit_amount, date_str, month_str, year_val]
+                st.success(f"Successfully updated transaction {selected_tx_id}!")
+                st.rerun()
+
+    with tab_tx3:
         with st.form("remove_tx_form"):
             st.write("### Delete Transaction Record")
             target_tx = st.selectbox("Select Transaction ID to Remove", st.session_state.transactions["Tx ID"] + " (" + st.session_state.transactions["Category"] + " - UGX " + st.session_state.transactions["Amount (UGX)"].astype(str) + ")")
